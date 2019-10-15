@@ -1,4 +1,5 @@
 # CSV2SQL
+[![CircleCI](https://circleci.com/gh/sanshirookazaki/csv2sql.svg?style=svg)](https://circleci.com/gh/sanshirookazaki/csv2sql)
 
 A CLI tool to csv import to database along directory.
 
