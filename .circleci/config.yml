@@ -1,0 +1,16 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
+      - run: go mod tidy
+      - run: go build -v
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
