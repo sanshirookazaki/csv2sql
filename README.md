@@ -25,21 +25,70 @@ OPTIONS:
         Database user (default: "root")
     -p string
         Database password (default: "")
+    -S string
+        Import specific tables (default: "")
+    -s bool
+        Separate CSV into 2 types. (default: false)
+        if the first charactor in file name is not number, then add file name to table name
+    -i bool
+        Ignore 1st line when import in CSV (default: true)
 ```
 
 ## Example
-Running:
+Case1:
 ```
-$ csv2sql -d user -p admin ./user
+$ csv2sql -d user -p root ./csv
 ```
 
 CSV files import to database. then table will be along directory
 ```
-file             -> import table
+file                  　　-> import table
+-----------------------------------------
+csv
+ └── user
+      ├── 1.csv          -> user
+      └── detail.csv     -> user
+      └── task
+            ├── 1.csv    -> user_task
+            └── todo.csv -> user_task
+```
 
-user
- ├── 1.csv       -> user
- ├── 2.csv       -> user
- └── item
-     └── 1.csv   -> user_item
+<br>
+
+Case2:
+```
+$ csv2sql -d user -p root -s ./csv
+```
+
+option "-s" works as follows
+```
+file                  　　-> import table
+-----------------------------------------
+csv
+ └── user
+      ├── 1.csv          -> user
+      └── detail.csv     -> user_detail
+      └── task
+            ├── 1.csv    -> user_task
+            └── todo.csv -> user_task_todo
+```
+
+<br>
+
+Case3:
+```
+$ csv2sql -d user -p root -S task ./csv
+```
+
+option "-S" filtering words
+```
+file                  　　-> import table
+-----------------------------------------
+csv
+ └── user
+      ├── 1.csv
+      └── detail.csv
+      └── task
+            ├── 1.csv    -> user_task
+            └── todo.csv -> user_task
 ```
