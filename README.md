@@ -1,5 +1,6 @@
 # CSV2SQL
 [![CircleCI](https://circleci.com/gh/sanshirookazaki/csv2sql.svg?style=svg)](https://circleci.com/gh/sanshirookazaki/csv2sql)
+[![Coverage Status](https://coveralls.io/repos/github/sanshirookazaki/csv2sql/badge.svg?branch=master)](https://coveralls.io/github/sanshirookazaki/csv2sql?branch=master)
 
 A CLI tool to csv import to database along directory.
 
