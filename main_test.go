@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func TestgetInitial(t *testing.T) {
+func TestGetInitial(t *testing.T) {
 	e := getInitial("abc")
 	if !(e == "a") {
 		t.Fatalf("error: %v", e)
