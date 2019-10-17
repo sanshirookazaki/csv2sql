@@ -28,8 +28,8 @@ var (
 func main() {
 	flag.Parse()
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", *user, *password, *host, *port, *database)
-	db := db.Conn(conn)
-	defer db.Close()
+	DB := db.Conn(conn)
+	defer DB.Close()
 
 	if len(os.Args) < 2 {
 		log.Panicf("Error: CSV path is required")
@@ -40,26 +40,54 @@ func main() {
 
 	csvs := csv.FindCsv(basePath)
 	tables := createTableList(csvs, basePath)
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		log.Panicf("Error: Can't begin transaction")
 	}
 	csvs = filterSpecificTables(csvs, *specific)
 	tables = filterSpecificTables(tables, *specific)
 
-	for i, csv := range csvs {
-		mysql.RegisterLocalFile(csv)
+	for i, csvPath := range csvs {
+		mysql.RegisterLocalFile(csvPath)
 		var err error
-		if *ignore {
-			_, err = db.Exec("LOAD DATA LOCAL INFILE '" + csv + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' IGNORE 1 LINES")
+
+		dbColumns := db.GetColumns(DB, tables[i])
+		csvColumns := csv.GetColumns(csvPath)
+		fmt.Println(csvColumns, dbColumns)
+		diffColumns := diffSlice(dbColumns, csvColumns)
+		fmt.Println(diffColumns)
+
+		query := "LOAD DATA LOCAL INFILE '" + csvPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+		if len(diffColumns) == 0 {
+			if *ignore {
+				_, err = DB.Exec(query + " IGNORE 1 LINES")
+			} else {
+				_, err = DB.Exec(query)
+			}
 		} else {
-			_, err = db.Exec("LOAD DATA LOCAL INFILE '" + csv + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ','")
+			csvFile := getFileNameWithoutExt(csvPath)
+			sets := " SET "
+			for i, column := range diffColumns {
+				sets += column + " = " + csvFile + " "
+				if i != (len(diffColumns) - 1) {
+					sets += ", "
+				}
+			}
+
+			fmt.Println(sets)
+			if *ignore {
+				_, err = DB.Exec(query + " IGNORE 1 LINES " + sets)
+			} else {
+				_, err = DB.Exec(query + sets)
+			}
 		}
+
 		if err != nil {
 			tx.Rollback()
+			fmt.Println(csvPath, "->", tables[i])
 			log.Panicf("Error: Query faild")
 		}
-		fmt.Println(csv, "import to", tables[i])
+		fmt.Println(csvPath, "import to", tables[i])
 	}
 
 	tx.Commit()
@@ -106,4 +134,34 @@ func initialIsInt(s string) bool {
 func getInitial(s string) string {
 	e := []rune(s)
 	return string(e[0])
+}
+
+func diffSlice(slice1 []string, slice2 []string) []string {
+	var diff []string
+
+	for i := 0; i < 2; i++ {
+		for _, s1 := range slice1 {
+			found := false
+			for _, s2 := range slice2 {
+				if s1 == s2 {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				diff = append(diff, s1)
+			}
+		}
+
+		if i == 0 {
+			slice1, slice2 = slice2, slice1
+		}
+	}
+
+	return diff
+}
+
+func getFileNameWithoutExt(path string) string {
+	return filepath.Base(path[:len(path)-len(filepath.Ext(path))])
 }
