@@ -53,9 +53,7 @@ func main() {
 
 		dbColumns := db.GetColumns(DB, tables[i])
 		csvColumns := csv.GetColumns(csvPath)
-		fmt.Println(csvColumns, dbColumns)
 		diffColumns := diffSlice(dbColumns, csvColumns)
-		fmt.Println(diffColumns)
 
 		query := "LOAD DATA LOCAL INFILE '" + csvPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
 		if len(diffColumns) == 0 {
@@ -74,9 +72,14 @@ func main() {
 				}
 			}
 
-			fmt.Println(sets)
+			var columns string
+			for _, colum := range csvColumns {
+				columns += "`" + colum + "`,"
+			}
+			columns = "(" + strings.TrimRight(columns, ",") + ") "
+
 			if *ignore {
-				_, err = DB.Exec(query + " IGNORE 1 LINES " + sets)
+				_, err = DB.Exec(query + " IGNORE 1 LINES " + columns + sets)
 			} else {
 				_, err = DB.Exec(query + sets)
 			}
@@ -85,8 +88,9 @@ func main() {
 		if err != nil {
 			tx.Rollback()
 			fmt.Println(csvPath, "->", tables[i])
-			log.Panicf("Error: Query faild")
+			log.Fatalf("Error: Query faild %v", err)
 		}
+
 		fmt.Println(csvPath, "import to", tables[i])
 	}
 
