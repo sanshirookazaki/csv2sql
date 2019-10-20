@@ -25,6 +25,7 @@ var (
 	specific = flag.String("S", "", "Import specific tables")
 	separate = flag.Bool("s", false, "Separate CSV into 2 types")
 	ignore   = flag.Bool("i", true, "Ignore 1st line of CSV")
+	auto     = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
 )
 
 func main() {
@@ -46,13 +47,8 @@ func main() {
 	csvs = filterSpecificTables(csvs, *specific)
 	tables = filterSpecificTables(tables, *specific)
 
-	//tx, err := DB.Begin()
 	dbm := txmanager.NewDB(DB)
-	//tx, err := dbm.TxBegin()
-	//defer tx.TxFinish()
-	//if err != nil {
-	//	log.Panicf("Error: Can't begin transaction")
-	//}
+
 	var err error
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		txmanager.Do(tx, func(tx txmanager.Tx) error {
@@ -70,7 +66,8 @@ func main() {
 					} else {
 						_, err = tx.Exec(query)
 					}
-				} else {
+					fmt.Println(csvPath, "import to", tables[i])
+				} else if *auto {
 					csvFile := getFileNameWithoutExt(csvPath)
 					sets := " SET "
 					for i, column := range diffColumns {
@@ -91,6 +88,7 @@ func main() {
 					} else {
 						_, err = tx.Exec(query + sets)
 					}
+					fmt.Println(csvPath, "import to", tables[i])
 				}
 
 				if err != nil {
@@ -99,14 +97,12 @@ func main() {
 					log.Fatalf("Error: Query faild %v", err)
 				}
 
-				fmt.Println(csvPath, "import to", tables[i])
 			}
 			return err
 		})
 		return err
 	})
 
-	//tx.TxCommit()
 	fmt.Println("Complete !!")
 }
 
