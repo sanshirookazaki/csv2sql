@@ -12,6 +12,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/sanshirookazaki/csv2sql/csv"
 	"github.com/sanshirookazaki/csv2sql/db"
+
+	"github.com/shogo82148/txmanager"
 )
 
 var (
@@ -40,61 +42,71 @@ func main() {
 
 	csvs := csv.FindCsv(basePath)
 	tables := createTableList(csvs, basePath)
-	tx, err := DB.Begin()
-	if err != nil {
-		log.Panicf("Error: Can't begin transaction")
-	}
+
 	csvs = filterSpecificTables(csvs, *specific)
 	tables = filterSpecificTables(tables, *specific)
 
-	for i, csvPath := range csvs {
-		mysql.RegisterLocalFile(csvPath)
-		var err error
+	//tx, err := DB.Begin()
+	dbm := txmanager.NewDB(DB)
+	//tx, err := dbm.TxBegin()
+	//defer tx.TxFinish()
+	//if err != nil {
+	//	log.Panicf("Error: Can't begin transaction")
+	//}
+	var err error
+	txmanager.Do(dbm, func(tx txmanager.Tx) error {
+		txmanager.Do(tx, func(tx txmanager.Tx) error {
+			for i, csvPath := range csvs {
+				mysql.RegisterLocalFile(csvPath)
 
-		dbColumns := db.GetColumns(DB, tables[i])
-		csvColumns := csv.GetColumns(csvPath)
-		diffColumns := diffSlice(dbColumns, csvColumns)
+				dbColumns := db.GetColumns(DB, tables[i])
+				csvColumns := csv.GetColumns(csvPath)
+				diffColumns := diffSlice(dbColumns, csvColumns)
 
-		query := "LOAD DATA LOCAL INFILE '" + csvPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
-		if len(diffColumns) == 0 {
-			if *ignore {
-				_, err = DB.Exec(query + " IGNORE 1 LINES")
-			} else {
-				_, err = DB.Exec(query)
-			}
-		} else {
-			csvFile := getFileNameWithoutExt(csvPath)
-			sets := " SET "
-			for i, column := range diffColumns {
-				sets += column + " = " + csvFile + " "
-				if i != (len(diffColumns) - 1) {
-					sets += ", "
+				query := "LOAD DATA LOCAL INFILE '" + csvPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+				if len(diffColumns) == 0 {
+					if *ignore {
+						_, err = tx.Exec(query + " IGNORE 1 LINES")
+					} else {
+						_, err = tx.Exec(query)
+					}
+				} else {
+					csvFile := getFileNameWithoutExt(csvPath)
+					sets := " SET "
+					for i, column := range diffColumns {
+						sets += column + " = " + csvFile + " "
+						if i != (len(diffColumns) - 1) {
+							sets += ", "
+						}
+					}
+
+					var columns string
+					for _, colum := range csvColumns {
+						columns += "`" + colum + "`,"
+					}
+					columns = "(" + strings.TrimRight(columns, ",") + ") "
+
+					if *ignore {
+						_, err = tx.Exec(query + " IGNORE 1 LINES " + columns + sets)
+					} else {
+						_, err = tx.Exec(query + sets)
+					}
 				}
+
+				if err != nil {
+					fmt.Println(csvPath, "->", tables[i])
+					tx.TxRollback()
+					log.Fatalf("Error: Query faild %v", err)
+				}
+
+				fmt.Println(csvPath, "import to", tables[i])
 			}
+			return err
+		})
+		return err
+	})
 
-			var columns string
-			for _, colum := range csvColumns {
-				columns += "`" + colum + "`,"
-			}
-			columns = "(" + strings.TrimRight(columns, ",") + ") "
-
-			if *ignore {
-				_, err = DB.Exec(query + " IGNORE 1 LINES " + columns + sets)
-			} else {
-				_, err = DB.Exec(query + sets)
-			}
-		}
-
-		if err != nil {
-			tx.Rollback()
-			fmt.Println(csvPath, "->", tables[i])
-			log.Fatalf("Error: Query faild %v", err)
-		}
-
-		fmt.Println(csvPath, "import to", tables[i])
-	}
-
-	tx.Commit()
+	//tx.TxCommit()
 	fmt.Println("Complete !!")
 }
 
