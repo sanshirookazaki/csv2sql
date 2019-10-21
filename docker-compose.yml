@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  mysql:
+    build: ./mysql
+    image: mysql
+    container_name: mysql
+    hostname: mysql
+    ports:
+      - "3306:3306"
+    restart: always
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
