@@ -15,5 +15,5 @@ func TestCreateTables(t *testing.T) {
 	if !reflect.DeepEqual(tables, e) {
 		t.Fatalf("error: %v", e)
 	}
-	t.Log("Pass createTableList func")
+	t.Log("Pass createTables func")
 }
