@@ -43,7 +43,7 @@ func main() {
 	baseAbsPath, _ := filepath.Abs(dir)
 
 	csvAbsPaths := csv.FindCsv(baseAbsPath)
-	tables := createTableList(csvAbsPaths, baseAbsPath)
+	tables := createTables(csvAbsPaths, baseAbsPath)
 
 	csvAbsPaths = util.FilterSpecific(csvAbsPaths, *specific)
 	tables = util.FilterSpecific(tables, *specific)
@@ -113,7 +113,7 @@ func main() {
 	fmt.Println("Complete !!")
 }
 
-func createTableList(targetAbsPaths []string, baseAbsPath string) (tables []string) {
+func createTables(targetAbsPaths []string, baseAbsPath string) (tables []string) {
 	for _, targetPath := range targetAbsPaths {
 		relPath, _ := filepath.Rel(baseAbsPath, targetPath)
 
