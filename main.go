@@ -13,19 +13,21 @@ import (
 	"github.com/sanshirookazaki/csv2sql/csv"
 	"github.com/sanshirookazaki/csv2sql/db"
 
+	"github.com/iancoleman/strcase"
 	"github.com/shogo82148/txmanager"
 )
 
 var (
-	database = flag.String("d", "", "Name of Database")
-	host     = flag.String("h", "127.0.0.1", "Host of Database")
-	port     = flag.Int("P", 3306, "Database port number")
-	user     = flag.String("u", "root", "Database username")
-	password = flag.String("p", "", "Database password")
-	specific = flag.String("S", "", "Import specific tables")
-	separate = flag.Bool("s", false, "Separate CSV into 2 types")
-	ignore   = flag.Bool("i", true, "Ignore 1st line of CSV")
-	auto     = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
+	database  = flag.String("d", "", "Name of Database")
+	host      = flag.String("h", "127.0.0.1", "Host of Database")
+	port      = flag.Int("P", 3306, "Database port number")
+	user      = flag.String("u", "root", "Database username")
+	password  = flag.String("p", "", "Database password")
+	specific  = flag.String("S", "", "Import specific tables")
+	separate  = flag.Bool("s", false, "Separate CSV into 2 types")
+	ignore    = flag.Bool("i", false, "Ignore 1st line of CSV")
+	auto      = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
+	snakecase = flag.Bool("sn", false, "If csv columns is camelcase, convert to snakecase")
 )
 
 func main() {
@@ -39,10 +41,10 @@ func main() {
 	}
 
 	dir := os.Args[len(os.Args)-1]
-	basePath, _ := filepath.Abs(dir)
+	baseAbsPath, _ := filepath.Abs(dir)
 
-	csvs := csv.FindCsv(basePath)
-	tables := createTableList(csvs, basePath)
+	csvs := csv.FindCsv(baseAbsPath)
+	tables := createTableList(csvs, baseAbsPath)
 
 	csvs = filterSpecificTables(csvs, *specific)
 	tables = filterSpecificTables(tables, *specific)
@@ -52,51 +54,57 @@ func main() {
 	var err error
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		txmanager.Do(tx, func(tx txmanager.Tx) error {
-			for i, csvPath := range csvs {
-				mysql.RegisterLocalFile(csvPath)
+			for i, csvAbsPath := range csvs {
+				mysql.RegisterLocalFile(csvAbsPath)
 
 				dbColumns := db.GetColumns(DB, tables[i])
-				csvColumns := csv.GetColumns(csvPath)
+				csvColumns := csv.GetColumns(csvAbsPath)
+
+				// ToSnakeCase
+				var setColumns, sqlColumns, setQuery string
+				if *snakecase {
+					csvCamelColumns := csvColumns
+					snakeColumns := toSnakeSlice(csvColumns)
+					tmpColumns := connectEqual(snakeColumns, addPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
+					csvColumns = toSnakeSlice(csvColumns)
+					setColumns = strings.Join(tmpColumns, ",")                                  // "id=@id,user_id=@userId"
+					sqlColumns = "(" + strings.Join(addPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
+					setQuery = sqlColumns + " SET " + setColumns                                // "(@id,@userId) SET id=@id,user_id=@userId"
+				}
+
 				diffColumns := diffSlice(dbColumns, csvColumns)
 
-				query := "LOAD DATA LOCAL INFILE '" + csvPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+				baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+				if *ignore {
+					baseQuery += " IGNORE 1 LINES "
+				}
+
+				csvRelPath, _ := filepath.Rel(baseAbsPath, csvAbsPath)
 				if len(diffColumns) == 0 {
-					if *ignore {
-						_, err = tx.Exec(query + " IGNORE 1 LINES")
-					} else {
-						_, err = tx.Exec(query)
-					}
-					fmt.Println(csvPath, "import to", tables[i])
-				} else if *auto {
-					csvFile := getFileNameWithoutExt(csvPath)
-					sets := " SET "
+					_, err = tx.Exec(baseQuery + setQuery)
+					fmt.Println(csvRelPath, "import to", tables[i])
+				} else if len(diffColumns) != 0 && *auto {
+					csvFile := getFileNameWithoutExt(csvAbsPath)
+					var sets string
 					for i, column := range diffColumns {
-						sets += column + " = " + csvFile + " "
+						sets += column + "=" + csvFile
 						if i != (len(diffColumns) - 1) {
-							sets += ", "
+							sets += ","
 						}
 					}
-
-					var columns string
-					for _, colum := range csvColumns {
-						columns += "`" + colum + "`,"
+					if *snakecase {
+						setQuery += "," + sets
 					}
-					columns = "(" + strings.TrimRight(columns, ",") + ") "
 
-					if *ignore {
-						_, err = tx.Exec(query + " IGNORE 1 LINES " + columns + sets)
-					} else {
-						_, err = tx.Exec(query + sets)
-					}
-					fmt.Println(csvPath, "import to", tables[i])
+					_, err = tx.Exec(baseQuery + setQuery)
+					fmt.Println(csvRelPath, "import to", tables[i])
 				}
 
 				if err != nil {
-					fmt.Println(csvPath, "->", tables[i])
+					fmt.Println("Failed: ", csvAbsPath, "->", tables[i])
 					tx.TxRollback()
 					log.Fatalf("Error: Query faild %v", err)
 				}
-
 			}
 			return err
 		})
@@ -106,9 +114,9 @@ func main() {
 	fmt.Println("Complete !!")
 }
 
-func createTableList(paths []string, basePath string) (tableList []string) {
+func createTableList(paths []string, baseAbsPath string) (tableList []string) {
 	for _, path := range paths {
-		rpath, _ := filepath.Rel(basePath, path)
+		rpath, _ := filepath.Rel(baseAbsPath, path)
 
 		pathSlice := strings.Split(rpath, "/")
 		var tableParts []string
@@ -176,4 +184,29 @@ func diffSlice(slice1 []string, slice2 []string) []string {
 
 func getFileNameWithoutExt(path string) string {
 	return filepath.Base(path[:len(path)-len(filepath.Ext(path))])
+}
+
+func addPrefix(srcSlice []string, p string) (destSlice []string) {
+	for _, s := range srcSlice {
+		destSlice = append(destSlice, p+s)
+	}
+	return destSlice
+}
+
+func connectEqual(aSlice, bSlice []string) (destSlice []string) {
+	if len(aSlice) != len(bSlice) {
+		log.Fatal("Error: miss ")
+	}
+
+	for i := 0; i < len(aSlice); i++ {
+		destSlice = append(destSlice, aSlice[i]+"="+bSlice[i])
+	}
+	return destSlice
+}
+
+func toSnakeSlice(s []string) (snakeSlice []string) {
+	for _, e := range s {
+		snakeSlice = append(snakeSlice, strcase.ToSnake(e))
+	}
+	return snakeSlice
 }
