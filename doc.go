@@ -20,7 +20,7 @@ $ csv2sql [OPTIONS] [CSV_DIR]
             Import specific tables (default: "")
         -s bool
             Separate CSV into 2 types. (default: false)
-            if the first charactor in file name is not number, then add file name to table name
+            if the first character in file name is not number, then add file name to table name
         -i bool
             Ignore 1st line when import in CSV (default: false)
         -a bool
