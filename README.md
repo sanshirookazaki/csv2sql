@@ -36,12 +36,20 @@ OPTIONS:
         Ignore 1st line when import in CSV (default: true)
     -a bool
         Auto completion with file name when lack of csv columns (default: false)
+    -sn bool
+        If csv column is camelcase, convert to snakecase (default: false)
 ```
 
-## Example
+## Examples
+
+```
+$ docker-compose up -d
+```
+<br>
+
 Case1:
 ```
-$ csv2sql -d user -p root ./csv
+$ csv2sql -d todo ./examples
 ```
 
 CSV files import to database. then table will be along directory
@@ -61,7 +69,7 @@ csv
 
 Case2:
 ```
-$ csv2sql -d user -p root -s ./csv
+$ csv2sql -d todo -s ./examples
 ```
 
 option "-s" works as follows
@@ -81,7 +89,7 @@ csv
 
 Case3:
 ```
-$ csv2sql -d user -p root -S task ./csv
+$ csv2sql -d todo -S task ./examples
 ```
 
 option "-S" filtering words
