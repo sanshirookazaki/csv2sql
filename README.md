@@ -33,7 +33,7 @@ OPTIONS:
         Separate CSV into 2 types. (default: false)
         if the first charactor in file name is not number, then add file name to table name
     -i bool
-        Ignore 1st line when import in CSV (default: true)
+        Ignore 1st line when import in CSV (default: false)
     -a bool
         Auto completion with file name when lack of csv columns (default: false)
     -sn bool
