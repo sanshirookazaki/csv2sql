@@ -8,28 +8,28 @@ import (
 )
 
 type Result struct {
-	Field   string
-	Type    string
-	Null    string
-	Key     string
-	Default string
-	Extra   string
+	Field   sql.NullString
+	Type    sql.NullString
+	Null    sql.NullString
+	Key     sql.NullString
+	Default sql.NullString
+	Extra   sql.NullString
 }
 
 func GetColumns(db *sql.DB, table string) (columns []string) {
 	result := &Result{}
-	row, err := db.Query("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + table + "'")
+	row, err := db.Query("SHOW COLUMNS FROM " + table)
 	if err != nil {
 		log.Panicf("Error: Can't get columns")
 	}
 	defer row.Close()
 
 	for row.Next() {
-		err := row.Scan(&result.Field)
+		err := row.Scan(&result.Field, &result.Type, &result.Null, &result.Key, &result.Default, &result.Extra)
 		if err != nil {
 			log.Panicf("Error: Can't scan row")
 		}
-		columns = append(columns, result.Field)
+		columns = append(columns, result.Field.String)
 	}
-	return columns[:len(columns)-3]
+	return columns
 }
