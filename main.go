@@ -27,6 +27,7 @@ var (
 	ignore    = flag.Bool("i", false, "Ignore 1st line of CSV")
 	auto      = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
 	snakecase = flag.Int("sn", 0, "Convert columns into snakecase")
+	dryrun    = flag.Bool("dry-run", false, "dry run")
 )
 
 func main() {
@@ -107,6 +108,10 @@ func main() {
 			}
 			return err
 		})
+
+		if *dryrun {
+			tx.TxRollback()
+		}
 		return err
 	})
 

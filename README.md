@@ -42,6 +42,8 @@ OPTIONS:
             0: Do nothing
             1: Snakecase      (e.g. "testUser123Id" -> "test_user_123_id")
             2: Ignore number  (e.g. "testUser123Id" -> "test_user123_id")
+    -dry-run bool
+        dry run (default: false)
 ```
 
 ## Examples
