@@ -60,9 +60,14 @@ func ConnectEqual(aSlice, bSlice []string) (destSlice []string) {
 	return destSlice
 }
 
-func ToSnakeSlice(s []string) (snakeSlice []string) {
+func ToSnakeSlice(s []string, i int) (snakeSlice []string) {
 	for _, e := range s {
-		snakeSlice = append(snakeSlice, strcase.ToSnake(e))
+		if i == 1 {
+			e = strcase.ToSnake(e)
+		} else if i == 2 {
+			e = ToSnake(e)
+		}
+		snakeSlice = append(snakeSlice, e)
 	}
 	return snakeSlice
 }

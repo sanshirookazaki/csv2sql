@@ -26,7 +26,7 @@ var (
 	separate  = flag.Bool("s", false, "Separate CSV into 2 types")
 	ignore    = flag.Bool("i", false, "Ignore 1st line of CSV")
 	auto      = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
-	snakecase = flag.Bool("sn", false, "If csv columns is camelcase, convert to snakecase")
+	snakecase = flag.Int("sn", 0, "Convert columns into snakecase")
 )
 
 func main() {
@@ -61,11 +61,11 @@ func main() {
 
 				// ToSnakeCase
 				var setColumns, sqlColumns, setQuery string
-				if *snakecase {
+				if *snakecase != 0 {
 					csvCamelColumns := csvColumns
-					snakeColumns := util.ToSnakeSlice(csvColumns)
+					snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
 					tmpColumns := util.ConnectEqual(snakeColumns, util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
-					csvColumns = util.ToSnakeSlice(csvColumns)
+					csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
 					setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
 					sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
 					setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET id=@id,user_id=@userId"
@@ -91,7 +91,7 @@ func main() {
 							sets += ","
 						}
 					}
-					if *snakecase {
+					if *snakecase != 0 {
 						setQuery += "," + sets
 					}
 
@@ -124,6 +124,10 @@ func createTables(targetAbsPaths []string, baseAbsPath string) (tables []string)
 			table = dir + file
 		} else {
 			table = filepath.Dir(relPath)
+		}
+
+		if table == "." {
+			table = filepath.Base(baseAbsPath)
 		}
 		tables = append(tables, strings.Replace(table, "/", "_", -1))
 	}
