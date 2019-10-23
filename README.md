@@ -37,33 +37,32 @@ OPTIONS:
         Ignore 1st line when import in CSV (default: false)
     -a bool
         Auto completion with file name when lack of csv columns (default: false)
-    -sn bool
-        If csv column is camelcase, convert to snakecase (default: false)
+    -sn int
+        convert columns into snakecase (default: 0)
+            0: Do nothing
+            1: Snakecase      (e.g. "testUser123Id" -> "test_user_123_id")
+            2: Ignore number  (e.g. "testUser123Id" -> "test_user123_id")
 ```
 
 ## Examples
-
-```
-$ docker-compose up -d
-```
-<br>
 
 Case1:
 ```
 $ csv2sql -d todo ./examples
 ```
 
-CSV files import to database. then table will be along directory
+CSV files import to database, then table will be along directory.
 ```
-file                  　　-> import table
+file                  -> table
 -----------------------------------------
-csv
- └── user
-      ├── 1.csv          -> user
-      └── detail.csv     -> user
-      └── task
-            ├── 1.csv    -> user_task
-            └── todo.csv -> user_task
+examples
+├── user
+│   ├── 1.csv         -> user
+│   ├── detail.csv    -> detail
+│   └── task
+│       ├── 1.csv     -> user_task
+│       └── 2.csv     -> user_task
+└── user.csv          -> examples
 ```
 
 <br>
@@ -73,19 +72,19 @@ Case2:
 $ csv2sql -d todo -s ./examples
 ```
 
-option "-s" works as follows
+option "-s", works as follows
 ```
-file                  　　-> import table
+file                  -> table
 -----------------------------------------
-csv
- └── user
-      ├── 1.csv          -> user
-      └── detail.csv     -> user_detail
-      └── task
-            ├── 1.csv    -> user_task
-            └── todo.csv -> user_task_todo
+examples
+├── user
+│   ├── 1.csv         -> user
+│   ├── detail.csv    -> user_detail
+│   └── task
+│       ├── 1.csv     -> user_task
+│       └── 2.csv     -> user_task
+└── user.csv          -> user
 ```
-
 <br>
 
 Case3:
@@ -93,15 +92,36 @@ Case3:
 $ csv2sql -d todo -S task ./examples
 ```
 
-option "-S" filtering words
+option "-S", filtering words
 ```
-file                  　　-> import table
+file                  -> table
 -----------------------------------------
-csv
- └── user
-      ├── 1.csv
-      └── detail.csv
-      └── task
-            ├── 1.csv    -> user_task
-            └── todo.csv -> user_task
+examples
+├── user
+│   ├── 1.csv
+│   ├── detail.csv
+│   └── task
+│       ├── 1.csv     -> user_task
+│       └── 2.csv     -> user_task
+└── user.csv
+```
+<br>
+
+Case4:
+
+option "-a", auto compretion with file name.
+
+e.g. examples/user/task/1.csv
+```
+id,task
+1,homework
+```
+
+result is follow. user_id is complemented by file name "1" (1.csv).
+```
++----+---------+----------+
+| id | user_id | task     |
++----+---------+----------+
+|  1 |       1 | homework |
++----+---------+----------+
 ```

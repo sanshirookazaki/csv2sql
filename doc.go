@@ -1,9 +1,8 @@
 /*
 A CLI tool to csv import to database along directory.
 
-Usage
 
-$ csv2sql [OPTIONS] [CSV_DIR]
+    $ csv2sql [OPTIONS] [CSV_DIR]
 
     OPTIONS:
         -d string
@@ -20,65 +19,90 @@ $ csv2sql [OPTIONS] [CSV_DIR]
             Import specific tables (default: "")
         -s bool
             Separate CSV into 2 types. (default: false)
-            if the first character in file name is not number, then add file name to table name
+            if the first charactor in file name is not number, then add file name to table name
         -i bool
             Ignore 1st line when import in CSV (default: false)
         -a bool
             Auto completion with file name when lack of csv columns (default: false)
-        -sn bool
-            If csv columns is camelcase, convert to snakecase (default: false)
+        -sn int
+            convert columns into snakecase (default: 0)
+                0: Do nothing
+                1: Snakecase      (e.g. "testUser123Id" -> "test_user_123_id")
+                2: Ignore number  (e.g. "testUser123Id" -> "test_user123_id")
 
-Example
+## Examples
 
 Case1:
+    $ csv2sql -d todo ./examples
 
-    $ csv2sql -d user -p root ./csv
+CSV files import to database, then table will be along directory.
 
-
-CSV files import to database. then table will be along directory
-
-    file                     -> import table
+    file                  -> table
     -----------------------------------------
-    csv
-     └── user
-          ├── 1.csv          -> user
-          └── detail.csv     -> user
-          └── task
-                ├── 1.csv    -> user_task
-                └── todo.csv -> user_task
+    examples
+    ├── user
+    │   ├── 1.csv         -> user
+    │   ├── detail.csv    -> detail
+    │   └── task
+    │       ├── 1.csv     -> user_task
+    │       └── 2.csv     -> user_task
+    └── user.csv          -> examples
 
 
 Case2:
 
-    $ csv2sql -d user -p root -s ./csv
+    $ csv2sql -d todo -s ./examples
 
-option "-s" works as follows
+option "-s", works as follows
 
-    file                     -> import table
+    file                  -> table
     -----------------------------------------
-    csv
-     └── user
-          ├── 1.csv          -> user
-          └── detail.csv     -> user_detail
-          └── task
-                ├── 1.csv    -> user_task
-                └── todo.csv -> user_task_todo
+    examples
+    ├── user
+    │   ├── 1.csv         -> user
+    │   ├── detail.csv    -> user_detail
+    │   └── task
+    │       ├── 1.csv     -> user_task
+    │       └── 2.csv     -> user_task
+    └── user.csv          -> user
 
 
 Case3:
 
-    $ csv2sql -d user -p root -S task ./csv
+    $ csv2sql -d todo -S task ./examples
 
-option "-S" filtering words
+option "-S", filtering words
 
-    file                     -> import table
+    file                  -> table
     -----------------------------------------
-    csv
-     └── user
-          ├── 1.csv
-          └── detail.csv
-          └── task
-                ├── 1.csv    -> user_task
-                └── todo.csv -> user_task
+    examples
+    ├── user
+    │   ├── 1.csv
+    │   ├── detail.csv
+    │   └── task
+    │       ├── 1.csv     -> user_task
+    │       └── 2.csv     -> user_task
+    └── user.csv
+
+
+
+Case4:
+
+option "-a", auto compretion with file name.
+
+e.g. examples/user/task/1.csv
+
+    id,task
+    1,homework
+
+
+result is follow. user_id is complemented by file name "1" (1.csv).
+
+    +----+---------+----------+
+    | id | user_id | task     |
+    +----+---------+----------+
+    |  1 |       1 | homework |
+    +----+---------+----------+
+
 */
 package main
