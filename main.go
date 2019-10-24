@@ -73,6 +73,7 @@ func main() {
 				}
 
 				diffColumns := util.DiffSlice(dbColumns, csvColumns)
+				diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
 
 				baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
 				if *ignore {
@@ -81,8 +82,9 @@ func main() {
 
 				csvRelPath, _ := filepath.Rel(baseAbsPath, csvAbsPath)
 				if len(diffColumns) == 0 {
-					_, err = tx.Exec(baseQuery + setQuery)
-					fmt.Println(csvRelPath, "import to", tables[i])
+					_, err = tx.Query(baseQuery + setQuery)
+					log.Println(baseQuery + setQuery + "\n")
+					log.Println(csvRelPath, "import to", tables[i]+"\n")
 				} else if len(diffColumns) != 0 && *auto {
 					csvFile := util.GetFileNameWithoutExt(csvAbsPath)
 					var sets string
@@ -96,12 +98,13 @@ func main() {
 						setQuery += "," + sets
 					}
 
-					_, err = tx.Exec(baseQuery + setQuery)
-					fmt.Println(csvRelPath, "import to", tables[i])
+					_, err = tx.Query(baseQuery + setQuery)
+					log.Println(baseQuery + setQuery + "\n")
+					log.Println(csvRelPath, "import to", tables[i]+"\n")
 				}
 
 				if err != nil {
-					fmt.Println("Failed: ", csvAbsPath, "->", tables[i])
+					log.Println("Failed: ", csvAbsPath, "->", tables[i]+"\n")
 					tx.TxRollback()
 					log.Fatalf("Error: Query faild %v", err)
 				}
@@ -115,7 +118,7 @@ func main() {
 		return err
 	})
 
-	fmt.Println("Complete !!")
+	log.Println("Complete !!")
 }
 
 func createTables(targetAbsPaths []string, baseAbsPath string) (tables []string) {
