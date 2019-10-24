@@ -43,11 +43,8 @@ func main() {
 	dir := os.Args[len(os.Args)-1]
 	baseAbsPath, _ := filepath.Abs(dir)
 
-	csvAbsPaths := csv.FindCsv(baseAbsPath)
+	csvAbsPaths := csv.FindCsv(baseAbsPath, *specific)
 	tables := createTables(csvAbsPaths, baseAbsPath)
-
-	csvAbsPaths = util.FilterSpecific(csvAbsPaths, *specific)
-	tables = util.FilterSpecific(tables, *specific)
 
 	dbm := txmanager.NewDB(DB)
 
