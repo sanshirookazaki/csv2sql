@@ -73,15 +73,15 @@ func ToSnakeSlice(s []string, i int) (snakeSlice []string) {
 }
 
 func RemoveElements(target, remove []string) (dest []string) {
-	for i := 0; i < len(target); i++ {
-		tar := target[i]
-		for _, rem := range remove {
-			if tar == rem {
-				dest = append(target[:i], target[i+1:]...)
-				i--
-				break
+L:
+	for _, t := range target {
+		for _, r := range remove {
+			if t == r {
+				continue L
 			}
 		}
+
+		dest = append(dest, t)
 	}
 	return dest
 }

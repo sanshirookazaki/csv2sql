@@ -18,17 +18,17 @@ func GetInitial(s string) string {
 	return string(e[0])
 }
 
-func ToSnake(in string) string {
-	runes := []rune(in)
+func ToSnake(s string) string {
+	runes := []rune(s)
 	length := len(runes)
 
-	var out []rune
+	var result []rune
 	for i := 0; i < length; i++ {
-		if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
-			out = append(out, '_')
+		if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || (unicode.IsLower(runes[i-1]) || unicode.IsDigit(runes[i-1]))) {
+			result = append(result, '_')
 		}
-		out = append(out, unicode.ToLower(runes[i]))
+		result = append(result, unicode.ToLower(runes[i]))
 	}
 
-	return string(out)
+	return string(result)
 }
