@@ -50,7 +50,7 @@ OPTIONS:
 
 Case1:
 ```
-$ csv2sql -d todo ./examples
+$ csv2sql -d todo -i ./examples
 ```
 
 CSV files import to database, then table will be along directory.
@@ -71,7 +71,7 @@ examples
 
 Case2:
 ```
-$ csv2sql -d todo -s ./examples
+$ csv2sql -d todo -i -s ./examples
 ```
 
 option "-s", works as follows
@@ -91,7 +91,7 @@ examples
 
 Case3:
 ```
-$ csv2sql -d todo -S task ./examples
+$ csv2sql -d todo -i -S task ./examples
 ```
 
 option "-S", filtering words
@@ -126,4 +126,13 @@ result is follow. user_id is complemented by file name "1" (1.csv).
 +----+---------+----------+
 |  1 |       1 | homework |
 +----+---------+----------+
+```
+
+<br>
+
+## Docker RUN
+```
+docker build -t csv2sql .
+
+docker run -v ${PWD}/examples:/tmp/examples --rm --network host csv2sql -d todo -i /tmp/examples
 ```

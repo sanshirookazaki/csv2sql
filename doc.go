@@ -35,7 +35,7 @@ A CLI tool to csv import to database along directory.
 ## Examples
 
 Case1:
-    $ csv2sql -d todo ./examples
+    $ csv2sql -d todo -i ./examples
 
 CSV files import to database, then table will be along directory.
 
@@ -53,7 +53,7 @@ CSV files import to database, then table will be along directory.
 
 Case2:
 
-    $ csv2sql -d todo -s ./examples
+    $ csv2sql -d todo -i -s ./examples
 
 option "-s", works as follows
 
@@ -71,7 +71,7 @@ option "-s", works as follows
 
 Case3:
 
-    $ csv2sql -d todo -S task ./examples
+    $ csv2sql -d todo -i -S task ./examples
 
 option "-S", filtering words
 
