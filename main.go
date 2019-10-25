@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,6 +32,7 @@ var (
 )
 
 func main() {
+	log.SetOutput(io.MultiWriter(os.Stdout))
 	flag.Parse()
 	conn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", *user, *password, *host, *port, *database)
 	DB := db.Conn(conn)
