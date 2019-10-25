@@ -105,7 +105,7 @@ func TestToSnakeSlice(t *testing.T) {
 func TestRemoveElements(t *testing.T) {
 	s := []string{"test", "abc", "one", "123"}
 	r := []string{"one", "test123", "two"}
-	e := []string{"test", "abc"}
+	e := []string{"test", "abc", "123"}
 	if !reflect.DeepEqual(RemoveElements(s, r), e) {
 		t.Fatalf("error: %v", e)
 	}
