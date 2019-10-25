@@ -9,13 +9,13 @@ import (
 func GetColumns(csvPath string) (columns []string) {
 	file, err := os.Open(csvPath)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error: Can't Open file %v", err)
 	}
 	defer file.Close()
 	reader := csv.NewReader(file)
 	columns, err = reader.Read()
 	if err != nil {
-		log.Panicf("Error: Can't read csv columns")
+		log.Fatalf("Error: Can't read csv columns %v", err)
 	}
 
 	return columns

@@ -41,76 +41,80 @@ func main() {
 	}
 
 	dir := os.Args[len(os.Args)-1]
-	baseAbsPath, _ := filepath.Abs(dir)
+	baseAbsPath, err := filepath.Abs(dir)
+	if err != nil {
+		log.Fatalf("Error: CSV path doesn't exist %v", err)
+	}
 
 	csvAbsPaths := csv.FindCsv(baseAbsPath, *specific)
 	tables := createTables(csvAbsPaths, baseAbsPath)
 
 	dbm := txmanager.NewDB(DB)
 
-	var err error
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
-		txmanager.Do(tx, func(tx txmanager.Tx) error {
-			for i, csvAbsPath := range csvAbsPaths {
-				mysql.RegisterLocalFile(csvAbsPath)
+		for i, csvAbsPath := range csvAbsPaths {
+			mysql.RegisterLocalFile(csvAbsPath)
 
-				dbColumns := db.GetColumns(DB, tables[i])
-				csvColumns := csv.GetColumns(csvAbsPath)
+			dbColumns := db.GetColumns(DB, tables[i])
+			csvColumns := csv.GetColumns(csvAbsPath)
 
-				// ToSnakeCase
-				var setColumns, sqlColumns, setQuery string
-				if *snakecase != 0 {
-					csvCamelColumns := csvColumns
-					snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
-					tmpColumns := util.ConnectEqual(snakeColumns, util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
-					csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
-					setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
-					sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
-					setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET id=@id,user_id=@userId"
-				}
-
-				diffColumns := util.DiffSlice(dbColumns, csvColumns)
-				diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
-
-				baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
-				if *ignore {
-					baseQuery += " IGNORE 1 LINES "
-				}
-
-				csvRelPath, _ := filepath.Rel(baseAbsPath, csvAbsPath)
-				if len(diffColumns) == 0 {
-					_, err = tx.Query(baseQuery + setQuery)
-					log.Println(baseQuery + setQuery + "\n")
-					log.Println(csvRelPath, "import to", tables[i]+"\n")
-				} else if len(diffColumns) != 0 && *auto {
-					csvFile := util.GetFileNameWithoutExt(csvAbsPath)
-					var sets string
-					for i, column := range diffColumns {
-						sets += column + "=" + csvFile
-						if i != (len(diffColumns) - 1) {
-							sets += ","
-						}
-					}
-					if *snakecase != 0 {
-						setQuery += "," + sets
-					}
-
-					_, err = tx.Query(baseQuery + setQuery)
-					log.Println(baseQuery + setQuery + "\n")
-					log.Println(csvRelPath, "import to", tables[i]+"\n")
-				}
-
-				if err != nil {
-					log.Println("Failed: ", csvAbsPath, "->", tables[i]+"\n")
-					tx.TxRollback()
-					log.Fatalf("Error: Query faild %v", err)
-				}
+			// ToSnakeCase
+			var setColumns, sqlColumns, setQuery string
+			if *snakecase != 0 {
+				csvCamelColumns := csvColumns
+				snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
+				tmpColumns := util.ConnectEqual(snakeColumns, util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
+				csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
+				setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
+				sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
+				setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET id=@id,user_id=@userId"
 			}
-			return err
-		})
+
+			diffColumns := util.DiffSlice(dbColumns, csvColumns)
+			diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
+
+			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+			if *ignore {
+				baseQuery += " IGNORE 1 LINES "
+			}
+
+			csvRelPath, err := filepath.Rel(baseAbsPath, csvAbsPath)
+			if err != nil {
+				log.Fatalf("Error: Can't create CsvRelPath %v", err)
+			}
+			var query string
+			if len(diffColumns) == 0 {
+				query = baseQuery + setQuery
+			} else if len(diffColumns) != 0 && *auto {
+				csvFile := util.GetFileNameWithoutExt(csvAbsPath)
+				var sets string
+				for i, column := range diffColumns {
+					sets += column + "=" + csvFile
+					if i != (len(diffColumns) - 1) {
+						sets += ","
+					}
+				}
+				if *snakecase != 0 {
+					setQuery += "," + sets
+				}
+
+				query = baseQuery + setQuery
+			}
+
+			db.TxExecQuery(dbm, query)
+			log.Println(query + "\n")
+			log.Println(csvRelPath, "import to", tables[i]+"\n")
+
+			if err != nil {
+				log.Println("Failed: ", csvRelPath, "->", tables[i]+"\n"+"Rollbacked"+"\n")
+				tx.TxRollback()
+				log.Fatalf("Error: Query faild %v", err)
+			}
+		}
 
 		if *dryrun {
 			tx.TxRollback()
+			log.Println("Dry Run !")
 		}
 		return err
 	})
@@ -120,7 +124,10 @@ func main() {
 
 func createTables(targetAbsPaths []string, baseAbsPath string) (tables []string) {
 	for _, targetPath := range targetAbsPaths {
-		relPath, _ := filepath.Rel(baseAbsPath, targetPath)
+		relPath, err := filepath.Rel(baseAbsPath, targetPath)
+		if err != nil {
+			log.Fatalf("Error: Can't create RelPath %v", err)
+		}
 
 		var table string
 		if *separate && !util.InitialIsInt(filepath.Base(relPath)) {

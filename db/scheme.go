@@ -20,14 +20,14 @@ func GetColumns(db *sql.DB, table string) (columns []string) {
 	result := &Result{}
 	row, err := db.Query("SHOW COLUMNS FROM " + table)
 	if err != nil {
-		log.Panicf("Error: Can't get columns")
+		log.Fatalf("Error: Can't get columns %v", err)
 	}
 	defer row.Close()
 
 	for row.Next() {
 		err := row.Scan(&result.Field, &result.Type, &result.Null, &result.Key, &result.Default, &result.Extra)
 		if err != nil {
-			log.Panicf("Error: Can't scan row")
+			log.Fatalf("Error: Can't scan row %v", err)
 		}
 		columns = append(columns, result.Field.String)
 	}

@@ -51,7 +51,7 @@ func AddPrefix(srcSlice []string, p string) (destSlice []string) {
 
 func ConnectEqual(aSlice, bSlice []string) (destSlice []string) {
 	if len(aSlice) != len(bSlice) {
-		log.Fatal("Error: miss ")
+		log.Fatal("Error: Miss ConnectEqual, Different Length Slice")
 	}
 
 	for i := 0; i < len(aSlice); i++ {
