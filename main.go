@@ -49,16 +49,21 @@ func main() {
 	}
 
 	csvAbsPaths := csv.FindCsv(baseAbsPath, *specific)
-	tables := createTables(csvAbsPaths, baseAbsPath)
+	targetTables := createTables(csvAbsPaths, baseAbsPath)
+	tables, _ := db.GetTables(DB)
 
 	dbm := txmanager.NewDB(DB)
 
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		for i, csvAbsPath := range csvAbsPaths {
+			if !util.Contains(tables, targetTables[i]) {
+				continue
+			}
+
 			mysql.RegisterLocalFile(csvAbsPath)
 
-			dbColumns := db.GetColumns(DB, tables[i])
-			csvColumns := csv.GetColumns(csvAbsPath)
+			dbColumns, _ := db.GetColumns(DB, targetTables[i])
+			csvColumns, _ := csv.GetColumns(csvAbsPath)
 
 			// ToSnakeCase
 			var setColumns, sqlColumns, setQuery string
@@ -75,7 +80,7 @@ func main() {
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
 			diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
 
-			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + tables[i] + " FIELDS TERMINATED BY ',' "
+			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + targetTables[i] + " FIELDS TERMINATED BY ',' "
 			if *ignore {
 				baseQuery += " IGNORE 1 LINES "
 			}
@@ -91,7 +96,7 @@ func main() {
 				csvFile := util.GetFileNameWithoutExt(csvAbsPath)
 				var sets string
 				for i, column := range diffColumns {
-					sets += column + "=" + csvFile
+					sets += column + "='" + csvFile + "'"
 					if i != (len(diffColumns) - 1) {
 						sets += ","
 					}
@@ -103,12 +108,12 @@ func main() {
 				query = baseQuery + setQuery
 			}
 
-			db.TxExecQuery(dbm, query)
+			err = db.TxExecQuery(tx, query)
 			log.Println(query + "\n")
-			log.Println(csvRelPath, "import to", tables[i]+"\n")
+			log.Println(csvRelPath, "import to", targetTables[i]+"\n")
 
 			if err != nil {
-				log.Println("Failed: ", csvRelPath, "->", tables[i]+"\n"+"Rollbacked"+"\n")
+				log.Println("Failed: ", csvRelPath, "->", targetTables[i]+"\n"+"Rollbacked"+"\n")
 				tx.TxRollback()
 				log.Fatalf("Error: Query faild %v", err)
 			}
