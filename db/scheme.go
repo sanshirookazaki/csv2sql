@@ -20,7 +20,7 @@ func GetColumns(db *sql.DB, table string) (columns []string, err error) {
 	result := &Result{}
 	row, err := db.Query("SHOW COLUMNS FROM " + table)
 	if err != nil {
-		log.Println("Error: Can't get columns %v", err)
+		log.Printf("Error: Can't get columns %v", err)
 	}
 	defer row.Close()
 
@@ -38,7 +38,7 @@ func GetTables(db *sql.DB) (tables []string, err error) {
 	var table string
 	res, err := db.Query("SHOW TABLES")
 	if err != nil {
-		log.Println("Error: Can't get tables %v", err)
+		log.Printf("Error: Can't get tables %v", err)
 	}
 	for res.Next() {
 		res.Scan(&table)
