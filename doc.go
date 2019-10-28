@@ -19,7 +19,7 @@ A CLI tool to csv import to database along directory.
             Import specific tables (default: "")
         -s bool
             Separate CSV into 2 types. (default: false)
-            if the first charactor in file name is not number, then add file name to table name
+            if the first character in file name is not number, then add file name to table name
         -i bool
             Ignore 1st line when import in CSV (default: false)
         -a bool
@@ -71,7 +71,7 @@ option "-s", works as follows
 
 Case3:
 
-    $ csv2sql -d todo -i -S task ./examples
+    $ csv2sql -d todo -i -S user/task ./examples
 
 option "-S", filtering words
 

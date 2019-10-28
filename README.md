@@ -91,7 +91,7 @@ examples
 
 Case3:
 ```
-$ csv2sql -d todo -i -S task ./examples
+$ csv2sql -d todo -i -S user/task ./examples
 ```
 
 option "-S", filtering words
@@ -134,5 +134,5 @@ result is follow. user_id is complemented by file name "1" (1.csv).
 ```
 docker build -t csv2sql .
 
-docker run -v ${PWD}/examples:/tmp/examples --rm --network host csv2sql -d todo -i /tmp/examples
+docker run -v /path/to/your/csv:/tmp/csv --rm --network host csv2sql -d todo -i /tmp/csv
 ```
