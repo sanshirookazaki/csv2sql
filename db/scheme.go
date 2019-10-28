@@ -27,7 +27,7 @@ func GetColumns(db *sql.DB, table string) (columns []string, err error) {
 	for row.Next() {
 		err := row.Scan(&result.Field, &result.Type, &result.Null, &result.Key, &result.Default, &result.Extra)
 		if err != nil {
-			log.Println("Error: Can't scan row %v", err)
+			log.Printf("Error: Can't scan row %v", err)
 		}
 		columns = append(columns, result.Field.String)
 	}
