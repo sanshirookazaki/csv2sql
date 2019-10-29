@@ -94,7 +94,7 @@ Case3:
 $ csv2sql -d todo -i -S user/task ./examples
 ```
 
-option "-S", filtering words
+option "-S", csv path filtering
 ```
 file                  -> table
 -----------------------------------------
