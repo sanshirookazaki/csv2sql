@@ -14,6 +14,7 @@ import (
 	"github.com/sanshirookazaki/csv2sql/db"
 	"github.com/sanshirookazaki/csv2sql/util"
 
+	"github.com/fatih/color"
 	"github.com/shogo82148/txmanager"
 )
 
@@ -57,6 +58,9 @@ func main() {
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		for i, csvAbsPath := range csvAbsPaths {
 			if !util.Contains(tables, targetTables[i]) {
+				continue
+			}
+			if !csv.ExistData(csvAbsPath) {
 				continue
 			}
 
@@ -110,10 +114,12 @@ func main() {
 
 			err = db.TxExecQuery(tx, query)
 			log.Println(query + "\n")
-			log.Println(csvRelPath, "import to", targetTables[i]+"\n")
+			fg := color.New(color.FgGreen)
+			fg.Println(csvRelPath, "import to", targetTables[i]+"\n")
 
 			if err != nil {
-				log.Println("Failed: ", csvRelPath, "->", targetTables[i]+"\n"+"Rollbacked"+"\n")
+				fr := color.New(color.FgRed)
+				fr.Println("Failed: ", csvRelPath, "->", targetTables[i], "\n"+"Rollback")
 				tx.TxRollback()
 				log.Fatalf("Error: Query faild %v", err)
 			}
@@ -125,8 +131,8 @@ func main() {
 		}
 		return err
 	})
-
-	log.Println("Complete !!")
+	fc := color.New(color.FgCyan)
+	fc.Println("Complete !!")
 }
 
 func createTables(targetAbsPaths []string, baseAbsPath string) (tables []string) {
