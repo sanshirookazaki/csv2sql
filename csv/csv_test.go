@@ -14,3 +14,11 @@ func TestFindCsv(t *testing.T) {
 	}
 	t.Log("Pass FindCsv func")
 }
+
+func TestExistData(t *testing.T) {
+	csvPath := "../examples/user/detail.csv"
+	if !ExistData(csvPath) {
+		t.Fatalf("error: %v", csvPath)
+	}
+	t.Log("Pass ExistData func")
+}

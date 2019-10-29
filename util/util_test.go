@@ -111,3 +111,12 @@ func TestRemoveElements(t *testing.T) {
 	}
 	t.Log("Pass RemoveElemnts func")
 }
+
+func TestContains(t *testing.T) {
+	s := []string{"abc", "def", "ghi"}
+	e := "def"
+	if !Contains(s, e) {
+		t.Fatalf("error: %v", e)
+	}
+	t.Log("Pass Contains func")
+}
