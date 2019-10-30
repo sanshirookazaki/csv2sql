@@ -30,6 +30,7 @@ var (
 	auto      = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
 	snakecase = flag.Int("sn", 0, "Convert columns into snakecase")
 	dryrun    = flag.Bool("dry-run", false, "dry run")
+	force     = flag.Bool("f", false, "Force run: ignore error")
 )
 
 func main() {
@@ -117,7 +118,7 @@ func main() {
 				query = baseQuery + setQuery
 			}
 
-			err = db.TxExecQuery(tx, query)
+			err = db.TxExecQuery(tx, query, *force)
 			log.Println(query + "\n")
 			fg := color.New(color.FgGreen)
 			fg.Println(csvRelPath, "import to", targetTables[i]+"\n")

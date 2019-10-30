@@ -2,9 +2,13 @@ package db
 
 import "github.com/shogo82148/txmanager"
 
-func TxExecQuery(dbm txmanager.DB, query string) error {
+func TxExecQuery(dbm txmanager.DB, query string, force bool) error {
 	err := txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		_, err := tx.Query(query)
+		if force {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}

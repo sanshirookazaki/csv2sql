@@ -31,6 +31,8 @@ A CLI tool to csv import to database along directory.
                 2: Ignore number  (e.g. "testUser123Id" -> "test_user123_id")
         -dry-run bool
             dry run (default: false)
+        -f bool
+            Force run: ignore error (default: false)
 
 ## Examples
 
