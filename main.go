@@ -72,6 +72,8 @@ func main() {
 			// ToSnakeCase
 			var setColumns, sqlColumns, setQuery string
 			if *snakecase != 0 {
+				tmpDiffColumns := util.DiffSlice(dbColumns, util.ToSnakeSlice(csvColumns, *snakecase))
+				csvColumns = util.RemoveElements(csvColumns, tmpDiffColumns)
 				csvCamelColumns := csvColumns
 				snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
 				tmpColumns := util.ConnectEqual(snakeColumns, util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
@@ -79,6 +81,9 @@ func main() {
 				setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
 				sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
 				setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET id=@id,user_id=@userId"
+			} else {
+				tmpDiffColumns := util.DiffSlice(dbColumns, csvColumns)
+				csvColumns = util.RemoveElements(csvColumns, tmpDiffColumns)
 			}
 
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
