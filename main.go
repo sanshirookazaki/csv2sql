@@ -73,18 +73,14 @@ func main() {
 			// ToSnakeCase
 			var setColumns, sqlColumns, setQuery string
 			if *snakecase != 0 {
-				tmpDiffColumns := util.DiffSlice(dbColumns, util.ToSnakeSlice(csvColumns, *snakecase))
-				csvColumns = util.RemoveElements(csvColumns, tmpDiffColumns)
 				csvCamelColumns := csvColumns
 				snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
-				tmpColumns := util.ConnectEqual(snakeColumns, util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
+				tmpColumns := util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
 				csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
 				setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
 				sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
-				setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET id=@id,user_id=@userId"
-			} else {
-				tmpDiffColumns := util.DiffSlice(dbColumns, csvColumns)
-				csvColumns = util.RemoveElements(csvColumns, tmpDiffColumns)
+				setQuery = sqlColumns + " SET " + setColumns
+				fmt.Println(setQuery) // "(@id,@userId) SET id=@id,user_id=@userId"
 			}
 
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
@@ -106,7 +102,7 @@ func main() {
 				csvFile := util.GetFileNameWithoutExt(csvAbsPath)
 				var sets string
 				for i, column := range diffColumns {
-					sets += column + "='" + csvFile + "'"
+					sets += "`" + column + "`='" + csvFile + "'"
 					if i != (len(diffColumns) - 1) {
 						sets += ","
 					}
