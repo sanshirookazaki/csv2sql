@@ -16,7 +16,7 @@ func FilterSpecific(list []string, specific string) (result []string) {
 	return result
 }
 
-func DiffSlice(slice1 []string, slice2 []string) []string {
+func DiffSlice(slice1, slice2 []string) []string {
 	var diff []string
 
 	for i := 0; i < 2; i++ {
@@ -93,4 +93,11 @@ func Contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func EncloseMark(s []string, m1, m2 string) (dest []string) {
+	for _, v := range s {
+		dest = append(dest, m1+v+m2)
+	}
+	return dest
 }
