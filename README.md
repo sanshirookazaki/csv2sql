@@ -3,6 +3,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/sanshirookazaki/csv2sql/badge.svg?branch=master)](https://coveralls.io/github/sanshirookazaki/csv2sql?branch=master)
 [![GoDoc](https://godoc.org/github.com/sanshirookazaki/csv2sql?status.svg)](https://godoc.org/github.com/sanshirookazaki/csv2sql)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sanshirookazaki/csv2sql)](https://goreportcard.com/report/github.com/sanshirookazaki/csv2sql)
+[![Docker Build](https://img.shields.io/docker/cloud/automated/346o/csv2sql)](https://hub.docker.com/r/346o/csv2sql)
 
 A CLI tool to csv import to database along directory.
 
