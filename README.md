@@ -135,7 +135,7 @@ result is follow. user_id is complemented by file name "1" (1.csv).
 
 ## Docker RUN
 ```
-docker build -t csv2sql .
+docker pull 346o/csv2sql
 
-docker run -v /path/to/your/csv:/tmp/csv --rm --network host csv2sql -d todo -i /tmp/csv
+docker run -v $PWD/examples:/tmp --rm --network host 346o/csv2sql -d todo -i /tmp
 ```
