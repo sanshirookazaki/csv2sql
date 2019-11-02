@@ -62,6 +62,8 @@ func main() {
 				continue
 			}
 			if !csv.ExistData(csvAbsPath) {
+				fy := color.New(color.FgYellow)
+				fy.Println("Skip :", csvAbsPath)
 				continue
 			}
 
@@ -75,12 +77,11 @@ func main() {
 			if *snakecase != 0 {
 				csvCamelColumns := csvColumns
 				snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
-				tmpColumns := util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.AddPrefix(csvColumns, "@")) // [id=@id user_id=@userId]
+				tmpColumns := util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.AddPrefix(csvColumns, "@")) // [`id`=@id `user_id`=@userId]
 				csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
-				setColumns = strings.Join(tmpColumns, ",")                                       // "id=@id,user_id=@userId"
+				setColumns = strings.Join(tmpColumns, ",")                                       // "`id`=@id,`user_id`=@userId"
 				sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
-				setQuery = sqlColumns + " SET " + setColumns
-				fmt.Println(setQuery) // "(@id,@userId) SET id=@id,user_id=@userId"
+				setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET `id`=@id,`user_id`=@userId"
 			}
 
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
@@ -117,7 +118,7 @@ func main() {
 			err = db.TxExecQuery(tx, query, *force)
 			log.Println(query + "\n")
 			fg := color.New(color.FgGreen)
-			fg.Println(csvRelPath, "import to", targetTables[i]+"\n")
+			fg.Println(csvRelPath, "import to", targetTables[i])
 
 			if err != nil {
 				fr := color.New(color.FgRed)
