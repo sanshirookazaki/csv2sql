@@ -63,7 +63,7 @@ func main() {
 			}
 			if !csv.ExistData(csvAbsPath) {
 				fy := color.New(color.FgYellow)
-				fy.Println("Skip :", csvAbsPath)
+				fy.Println("Skip :", csvAbsPath, "\n")
 				continue
 			}
 
@@ -116,16 +116,14 @@ func main() {
 			}
 
 			err = db.TxExecQuery(tx, query, *force)
-			log.Println(query + "\n")
-			fg := color.New(color.FgGreen)
-			fg.Println(csvRelPath, "import to", targetTables[i])
-
 			if err != nil {
 				fr := color.New(color.FgRed)
 				fr.Println("Failed: ", csvRelPath, "->", targetTables[i], "\n"+"Rollback")
 				tx.TxRollback()
 				log.Fatalf("Error: Query faild %v", err)
 			}
+			fg := color.New(color.FgGreen)
+			fg.Println(csvRelPath, "import to", targetTables[i], "\n")
 		}
 
 		if *dryrun {
