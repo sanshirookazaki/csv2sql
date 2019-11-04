@@ -63,7 +63,7 @@ func main() {
 			}
 			if !csv.ExistData(csvAbsPath) {
 				fy := color.New(color.FgYellow)
-				fy.Println("Skip :", csvAbsPath, "\n")
+				fy.Println("Skip :(table not exist)", csvAbsPath, "\n")
 				continue
 			}
 

@@ -1,6 +1,8 @@
 package db
 
 import (
+	"log"
+
 	"github.com/shogo82148/txmanager"
 
 	"github.com/fatih/color"
@@ -18,6 +20,7 @@ func TxExecQuery(dbm txmanager.DB, query string, force bool) error {
 		if err != nil {
 			return err
 		}
+		log.Println(query)
 		return nil
 	})
 	return err
