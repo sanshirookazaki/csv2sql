@@ -58,12 +58,13 @@ func main() {
 
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
 		for i, csvAbsPath := range csvAbsPaths {
+			fy := color.New(color.FgYellow)
 			if !util.Contains(tables, targetTables[i]) {
+				fy.Println("Skip :table not exist", targetTables[i], csvAbsPath+"\n")
 				continue
 			}
 			if !csv.ExistData(csvAbsPath) {
-				fy := color.New(color.FgYellow)
-				fy.Println("Skip :(table not exist)", csvAbsPath+"\n")
+				fy.Println("Skip :data not exist", targetTables[i], csvAbsPath+"\n")
 				continue
 			}
 
