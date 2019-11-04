@@ -63,7 +63,7 @@ func main() {
 			}
 			if !csv.ExistData(csvAbsPath) {
 				fy := color.New(color.FgYellow)
-				fy.Println("Skip :(table not exist)", csvAbsPath, "\n")
+				fy.Println("Skip :(table not exist)", csvAbsPath+"\n")
 				continue
 			}
 
@@ -123,7 +123,7 @@ func main() {
 				log.Fatalf("Error: Query faild %v", err)
 			}
 			fg := color.New(color.FgGreen)
-			fg.Println(csvRelPath, "import to", targetTables[i], "\n")
+			fg.Println(csvRelPath, "import to", targetTables[i]+"\n")
 		}
 
 		if *dryrun {
