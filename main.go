@@ -57,21 +57,21 @@ func main() {
 	dbm := txmanager.NewDB(DB)
 
 	txmanager.Do(dbm, func(tx txmanager.Tx) error {
-		for i, csvAbsPath := range csvAbsPaths {
+		for i := 0; i < len(csvAbsPaths); i++ {
 			fy := color.New(color.FgYellow)
 			if !util.Contains(tables, targetTables[i]) {
-				fy.Println("Skip :table not exist", targetTables[i], csvAbsPath+"\n")
+				fy.Println("Skip :table not exist", targetTables[i], csvAbsPaths[i]+"\n")
 				continue
 			}
-			if !csv.ExistData(csvAbsPath) {
-				fy.Println("Skip :data not exist", targetTables[i], csvAbsPath+"\n")
+			if !csv.ExistData(csvAbsPaths[i]) {
+				fy.Println("Skip :data not exist", targetTables[i], csvAbsPaths[i]+"\n")
 				continue
 			}
 
-			mysql.RegisterLocalFile(csvAbsPath)
+			mysql.RegisterLocalFile(csvAbsPaths[i])
 
 			dbColumns, _ := db.GetColumns(DB, targetTables[i])
-			csvColumns, _ := csv.GetColumns(csvAbsPath)
+			csvColumns, _ := csv.GetColumns(csvAbsPaths[i])
 
 			// ToSnakeCase
 			var setColumns, sqlColumns, setQuery string
@@ -88,12 +88,12 @@ func main() {
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
 			diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
 
-			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPath + "' INTO TABLE " + targetTables[i] + " FIELDS TERMINATED BY ',' "
+			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPaths[i] + "' INTO TABLE " + targetTables[i] + " FIELDS TERMINATED BY ',' "
 			if *ignore {
 				baseQuery += " IGNORE 1 LINES "
 			}
 
-			csvRelPath, err := filepath.Rel(baseAbsPath, csvAbsPath)
+			csvRelPath, err := filepath.Rel(baseAbsPath, csvAbsPaths[i])
 			if err != nil {
 				log.Fatalf("Error: Can't create CsvRelPath %v", err)
 			}
@@ -101,7 +101,7 @@ func main() {
 			if len(diffColumns) == 0 {
 				query = baseQuery + setQuery
 			} else if len(diffColumns) != 0 && *auto {
-				csvFile := util.GetFileNameWithoutExt(csvAbsPath)
+				csvFile := util.GetFileNameWithoutExt(csvAbsPaths[i])
 				var sets string
 				for i, column := range diffColumns {
 					sets += "`" + column + "`='" + csvFile + "'"
@@ -129,7 +129,7 @@ func main() {
 
 		if *dryrun {
 			tx.TxRollback()
-			log.Println("Dry Run !")
+			fmt.Println("Dry Run !")
 		}
 		return err
 	})
