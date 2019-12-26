@@ -4,6 +4,7 @@
 [![GoDoc](https://godoc.org/github.com/sanshirookazaki/csv2sql?status.svg)](https://godoc.org/github.com/sanshirookazaki/csv2sql)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sanshirookazaki/csv2sql)](https://goreportcard.com/report/github.com/sanshirookazaki/csv2sql)
 [![Docker Build](https://img.shields.io/docker/cloud/automated/346o/csv2sql)](https://hub.docker.com/r/346o/csv2sql)
+[![Actions Status](https://github.com/sanshirookazaki/csv2sql/workflows/Go/badge.svg)](https://github.com/sanshirookazaki/csv2sql/actions)
 
 A CLI tool to csv import to database along directory.
 
