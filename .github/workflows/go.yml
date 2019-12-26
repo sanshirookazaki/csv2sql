@@ -30,7 +30,7 @@ jobs:
       run: mysql -uroot -proot -P 33060 < mysql/init.sql > out.txt
 
     - name: Run
-      run: ./csv2sql -d todo -i ./examples
+      run: ./csv2sql -d todo -P 33060 -p root -i ./examples
 
     services:
       db:
