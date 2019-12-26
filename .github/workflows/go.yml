@@ -1,11 +1,11 @@
 name: Go
-on:   
+on:
   pull_request:
     branches:
       - master
 jobs:
 
-  build:
+  build_run:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -21,7 +21,19 @@ jobs:
 
     - name: Build
       run: |
-        go build -v . 
+        go build -v .
 
     - name: Test
       run: go test ./...
+
+    - name: Setup DB
+      run: mysql -uroot < mysql/init.sql > out.txt
+
+    services:
+	    db:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: ""
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
