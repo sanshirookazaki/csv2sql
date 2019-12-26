@@ -33,7 +33,7 @@ jobs:
       db:
         image: mysql:5.7
         ports:
-          - 3306:3306
+          - 33060:3306
         env:
           MYSQL_ROOT_PASSWORD: ""
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
