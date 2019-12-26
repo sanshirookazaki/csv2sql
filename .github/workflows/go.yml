@@ -26,11 +26,8 @@ jobs:
     - name: Test
       run: go test ./...
 
-    - name: Setup DB
-      run: mysql -uroot -proot -P 33060 < mysql/init.sql > out.txt
-
     - name: Run
-      run: ./csv2sql -d todo -P 33060 -p root -i ./examples
+      run: ./csv2sql -h localhost -d todo -P 33060 -p root -i ./examples
 
     services:
       db:
@@ -40,3 +37,4 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: "root"
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: "todo"
