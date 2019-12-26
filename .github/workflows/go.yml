@@ -27,7 +27,7 @@ jobs:
       run: go test ./...
 
     - name: Setup DB
-      run: mysql -uroot -P 33060 < mysql/init.sql > out.txt
+      run: mysql -uroot -p -P 33060 < mysql/init.sql > out.txt
 
     - name: Run
       run: ./csv2sql -d todo -i ./examples
