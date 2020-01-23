@@ -25,6 +25,7 @@ var (
 	user      = flag.String("u", "root", "Database username")
 	password  = flag.String("p", "", "Database password")
 	specific  = flag.String("S", "", "Import specific tables")
+	newline   = flag.String("n", "\n", "Write newlines at the ends of lines")
 	separate  = flag.Bool("s", false, "Separate CSV into 2 types")
 	ignore    = flag.Bool("i", false, "Ignore 1st line of CSV")
 	auto      = flag.Bool("a", false, "Auto completion with file name when lack of csv columns")
@@ -88,7 +89,7 @@ func main() {
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
 			diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
 
-			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPaths[i] + "' INTO TABLE " + targetTables[i] + " FIELDS TERMINATED BY ',' "
+			baseQuery := "LOAD DATA LOCAL INFILE '" + csvAbsPaths[i] + "' INTO TABLE " + targetTables[i] + " FIELDS TERMINATED BY ',' LINES TERMINATED BY " + "'" + *newline + "'"
 			if *ignore {
 				baseQuery += " IGNORE 1 LINES "
 			}
