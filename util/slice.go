@@ -60,6 +60,15 @@ func ConnectEqual(aSlice, bSlice []string) (destSlice []string) {
 	return destSlice
 }
 
+func SetNullValue(s []string) (setSlice []string) {
+	var set string
+	for _, v := range s {
+		set = "case @" + v + " when '' then NULL else @" + v + " end "
+		setSlice = append(setSlice, set)
+	}
+	return setSlice
+}
+
 func ToSnakeSlice(s []string, i int) (snakeSlice []string) {
 	for _, e := range s {
 		if i == 1 {
