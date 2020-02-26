@@ -19,6 +19,8 @@ A CLI tool to csv import to database along directory.
             Import specific tables (default: "")
         -n string
             Newline code (default: "\n")
+        -N bool
+            If csv value is empty, set null (default: false)
         -s bool
             Separate CSV into 2 types. (default: false)
             if the first character in file name is not number, then add file name to table name
