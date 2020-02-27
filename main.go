@@ -149,13 +149,18 @@ func main() {
 		}
 		return err
 	})
-	i := color.New(color.FgGreen)
-	i.Println("Success :", importList)
-	s := color.New(color.FgYellow)
-	s.Println("Skip :", skipList)
-	f := color.New(color.FgRed)
-	f.Println("Failed :", failList)
-
+	if len(importList) > 0 {
+		i := color.New(color.FgGreen)
+		i.Println("Success :", importList)
+	}
+	if len(skipList) > 0 {
+		s := color.New(color.FgYellow)
+		s.Println("Skip :", skipList)
+	}
+	if len(failList) > 0 {
+		f := color.New(color.FgRed)
+		f.Println("Failed :", failList)
+	}
 	fc := color.New(color.FgCyan)
 	fc.Println("Complete !!")
 }
