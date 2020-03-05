@@ -68,12 +68,12 @@ func main() {
 			fy := color.New(color.FgYellow)
 			if !util.Contains(tables, targetTables[i]) {
 				fy.Println("Skip :table not exist", targetTables[i], csvAbsPaths[i]+"\n")
-				skipList = append(skipList, targetTables[i])
+				skipList = append(skipList, csvAbsPaths[i])
 				continue
 			}
 			if !csv.ExistData(csvAbsPaths[i]) {
 				fy.Println("Skip :data not exist", targetTables[i], csvAbsPaths[i]+"\n")
-				skipList = append(skipList, targetTables[i])
+				skipList = append(skipList, csvAbsPaths[i])
 				continue
 			}
 
@@ -134,13 +134,13 @@ func main() {
 			if err != nil {
 				fr := color.New(color.FgRed)
 				fr.Println("Failed: ", csvRelPath, "->", targetTables[i], "\n"+"Rollback")
-				failList = append(failList, targetTables[i])
+				failList = append(failList, csvAbsPaths[i])
 				tx.TxRollback()
 				log.Fatalf("Error: Query faild %v", err)
 			}
 			fg := color.New(color.FgGreen)
 			fg.Println(csvRelPath, "import to", targetTables[i]+"\n")
-			importList = append(importList, targetTables[i])
+			importList = append(importList, csvAbsPaths[i])
 		}
 
 		if *dryrun {
@@ -151,15 +151,21 @@ func main() {
 	})
 	if len(importList) > 0 {
 		i := color.New(color.FgGreen)
-		i.Println("Success :", importList)
+		for _, v := range importList {
+			i.Println("Success :", v)
+		}
 	}
 	if len(skipList) > 0 {
 		s := color.New(color.FgYellow)
-		s.Println("Skip :", skipList)
+		for _, v := range skipList {
+			s.Println("Skip :", v)
+		}
 	}
 	if len(failList) > 0 {
 		f := color.New(color.FgRed)
-		f.Println("Failed :", failList)
+		for _, v := range failList {
+			f.Println("Failed :", v)
+		}
 	}
 	fc := color.New(color.FgCyan)
 	fc.Println("Complete !!")
