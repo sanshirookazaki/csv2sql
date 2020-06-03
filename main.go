@@ -43,7 +43,7 @@ func main() {
 	defer DB.Close()
 
 	if len(os.Args) < 2 {
-		log.Panicf("Error: CSV path is required")
+		log.Fatalf("Error: CSV path is required")
 	}
 
 	dir := os.Args[len(os.Args)-1]
@@ -82,23 +82,22 @@ func main() {
 			dbColumns, _ := db.GetColumns(DB, targetTables[i])
 			csvColumns, _ := csv.GetColumns(csvAbsPaths[i])
 
-			// ToSnakeCase
+			// ToSnakeCase for SET clause
 			var setColumns, sqlColumns, setQuery string
-			if *snakecase != 0 {
-				csvCamelColumns := csvColumns
-				snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
-				var tmpColumns []string
-				if *null {
-					tmpColumns = util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.SetNullValue(csvColumns)) // [`id`= case @id when '' then NULL else @id end `user_id`= case @userId when '' then NULL else @userId end ]
-				} else {
-					tmpColumns = util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.AddPrefix(csvColumns, "@")) // [`id`=@id `user_id`=@userId]
-				}
-				csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
-				setColumns = strings.Join(tmpColumns, ",")                                       // "`id`=@id,`user_id`=@userId"
-				sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
-				setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET `id`=@id,`user_id`=@userId"
+			csvCamelColumns := csvColumns
+			snakeColumns := util.ToSnakeSlice(csvColumns, *snakecase)
+			var tmpColumns []string
+			if *null {
+				tmpColumns = util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.SetNullValue(csvColumns)) // [`id`= case @id when '' then NULL else @id end `user_id`= case @userId when '' then NULL else @userId end ]
+			} else {
+				tmpColumns = util.ConnectEqual(util.EncloseMark(snakeColumns, "`", "`"), util.AddPrefix(csvColumns, "@")) // [`id`=@id `user_id`=@userId]
 			}
+			csvColumns = util.ToSnakeSlice(csvColumns, *snakecase)
+			setColumns = strings.Join(tmpColumns, ",")                                       // "`id`=@id,`user_id`=@userId"
+			sqlColumns = "(" + strings.Join(util.AddPrefix(csvCamelColumns, "@"), ",") + ")" // (@id,@userId)
+			setQuery = sqlColumns + " SET " + setColumns                                     // "(@id,@userId) SET `id`=@id,`user_id`=@userId"
 
+			// difference between dbColumns and csvColumns
 			diffColumns := util.DiffSlice(dbColumns, csvColumns)
 			diffColumns = util.RemoveElements(diffColumns, []string{"created_at", "updated_at"})
 
@@ -128,6 +127,8 @@ func main() {
 				}
 
 				query = baseQuery + setQuery
+			} else {
+				log.Fatalf("Error: Difference between dbColumns and csvColumns %v %v", diffColumns, csvAbsPaths[i])
 			}
 
 			err = db.TxExecQuery(tx, query, *force)
